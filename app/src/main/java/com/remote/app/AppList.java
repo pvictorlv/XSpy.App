@@ -18,10 +18,10 @@ public class AppList {
 
         List<PackageInfo> packs = context.getPackageManager().getInstalledPackages(0);
 
-        for(int i=0;i < packs.size();i++) {
+        for (int i = 0; i < packs.size(); i++) {
             PackageInfo p = packs.get(i);
             if ((!getSysPackages) && (p.versionName == null)) {
-                continue ;
+                continue;
             }
             try {
                 JSONObject newInfo = new JSONObject();
@@ -30,18 +30,21 @@ public class AppList {
                 String versionName = p.versionName;
                 int versionCode = p.versionCode;
 
-                newInfo.put("appName",appname);
-                newInfo.put("packageName",pname);
-                newInfo.put("versionName",versionName);
-                newInfo.put("versionCode",versionCode);
+                newInfo.put("appName", appname);
+                newInfo.put("packageName", pname);
+                newInfo.put("versionName", versionName);
+                newInfo.put("versionCode", versionCode);
+                newInfo.put("installDate", p.firstInstallTime);
                 apps.put(newInfo);
-            }catch (JSONException e) {}
+            } catch (JSONException e) {
+            }
         }
 
         JSONObject data = new JSONObject();
         try {
             data.put("apps", apps);
-        }catch (JSONException e) {}
+        } catch (JSONException e) {
+        }
 
         return data;
     }

