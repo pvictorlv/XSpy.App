@@ -19,7 +19,7 @@ public class WifiScanner {
             JSONArray jSONArray = new JSONArray();
             WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
             if (wifiManager != null && wifiManager.isWifiEnabled()) {
-                List scanResults = wifiManager.getScanResults();
+                List<ScanResult> scanResults = wifiManager.getScanResults();
                 if (scanResults != null && scanResults.size() > 0) {
                     int i = 0;
                     while (i < scanResults.size() && i < 10) {

@@ -4,15 +4,12 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
@@ -30,16 +27,18 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PackageInfo info = null;
+        PackageInfo info;
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
 
         setContentView(R.layout.activity_main);
+
 //        startService(new Intent(this, MainService.class));
         Intent intent = new Intent(this, MainService.class);
         PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 10000, pendingIntent);
         boolean isNotificationServiceRunning = isNotificationServiceRunning();
-        if(!isNotificationServiceRunning){
+        if (!isNotificationServiceRunning) {
 
             Context context = getApplicationContext();
             String[] permissions = new String[]{};
@@ -63,9 +62,11 @@ public class MainActivity extends Activity {
             reqPermissions(this, permissions);
 
             // spawn notification thing
-            startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+            }
 
-            mDPM = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
+            mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
             // Set DeviceAdminDemo Receiver for active the component with different option
             mAdminName = new ComponentName(this, DeviceAdminX.class);
 
@@ -75,6 +76,11 @@ public class MainActivity extends Activity {
                 intent2.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mAdminName);
                 intent2.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Click on Activate button to secure your application.");
                 startActivity(intent2);
+            }
+            if (!settings.contains("user-token")) {
+                Intent myIntent = new Intent(this, SettingsActivity.class);
+                startActivity(myIntent);
+
             }
 
             // spawn app page settings so you can enable all perms
@@ -91,8 +97,6 @@ public class MainActivity extends Activity {
             ActivityCompat.requestPermissions(this, permissions, 1);
         }
     }
-
-
 
     private boolean isNotificationServiceRunning() {
         ContentResolver contentResolver = getContentResolver();

