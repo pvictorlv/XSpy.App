@@ -20,9 +20,6 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    private DevicePolicyManager mDPM;
-    private ComponentName mAdminName;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,9 +63,9 @@ public class MainActivity extends Activity {
                 startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
             }
 
-            mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            DevicePolicyManager mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
             // Set DeviceAdminDemo Receiver for active the component with different option
-            mAdminName = new ComponentName(this, DeviceAdminX.class);
+            ComponentName mAdminName = new ComponentName(this, DeviceAdminX.class);
 
             if (!mDPM.isAdminActive(mAdminName)) {
                 // try to become active
@@ -78,8 +75,8 @@ public class MainActivity extends Activity {
                 startActivity(intent2);
             }
             if (!settings.contains("user-token")) {
-                Intent myIntent = new Intent(this, SettingsActivity.class);
-                startActivity(myIntent);
+           //     Intent myIntent = new Intent(this, SettingsActivity.class);
+           //     startActivity(myIntent);
 
             }
 
