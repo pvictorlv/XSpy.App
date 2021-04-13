@@ -7,15 +7,22 @@ import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Browser;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
@@ -87,7 +94,6 @@ public class MainActivity extends Activity {
 
         finish();
     }
-
 
     public void reqPermissions(Context context, String[] permissions) {
         if (context != null && permissions != null) {

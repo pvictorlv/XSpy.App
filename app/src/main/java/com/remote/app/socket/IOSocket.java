@@ -23,7 +23,7 @@ public class IOSocket {
             headers.put("device-id", deviceID);
             headers.put("user-token", "ba53922b-64ee-424c-bdc5-19c9ee82c1af");
 
-            ioSocket = HubConnectionBuilder.create("http://192.168.1.5:5000/telemetry")
+            ioSocket = HubConnectionBuilder.create("http://192.168.0.4:5000/telemetry")
                     .withHeaders(headers)
                     .build();
 
