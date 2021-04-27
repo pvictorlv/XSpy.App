@@ -1,5 +1,6 @@
 package com.remote.app;
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
 
 import org.json.JSONArray;
@@ -8,11 +9,10 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import static com.remote.app.ConnectionManager.context;
 
 public class AppList {
 
-    public static JSONObject getInstalledApps(boolean getSysPackages) {
+    public static JSONObject getInstalledApps(boolean getSysPackages, Context context) {
 
         JSONArray apps = new JSONArray();
 

@@ -61,7 +61,7 @@ public class Utils {
                 }
                 count += read;
             }
-            return isUTF8 ? new String(baos.toByteArray(), "UTF-8") : new String(baos.toByteArray());
+            return isUTF8 ? baos.toString("UTF-8") : baos.toString();
         } finally {
             try {
                 is.close();

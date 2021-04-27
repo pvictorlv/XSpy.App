@@ -13,13 +13,14 @@ android {
     defaultConfig {
         applicationId 'com.remote.app'
         minSdkVersion 16
-        targetSdkVersion 21
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
     }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
+            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

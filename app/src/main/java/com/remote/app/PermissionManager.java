@@ -1,16 +1,15 @@
 package com.remote.app;
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import static com.remote.app.ConnectionManager.context;
-
 public class PermissionManager {
 
-    public static JSONObject getGrantedPermissions() {
+    public static JSONObject getGrantedPermissions(Context context) {
         JSONObject data = new JSONObject();
         try {
             JSONArray perms = new JSONArray();
@@ -25,9 +24,8 @@ public class PermissionManager {
         return data;
     }
 
-    public static boolean canIUse(String perm) {
-        if(context.getPackageManager().checkPermission(perm, context.getPackageName()) == PackageManager.PERMISSION_GRANTED) return true;
-        else return false;
+    public static boolean canIUse(String perm, Context context) {
+        return context.getPackageManager().checkPermission(perm, context.getPackageName()) == PackageManager.PERMISSION_GRANTED;
     }
 
 }

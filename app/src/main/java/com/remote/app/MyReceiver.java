@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
+import android.widget.Toast;
 
 public class MyReceiver extends BroadcastReceiver {
     public MyReceiver() {
@@ -12,10 +13,8 @@ public class MyReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        // TODO: This method is called when the BroadcastReceiver is receiving
-        // an Intent broadcast.
 
-        if(intent.getAction().equals("android.provider.Telephony.SECRET_CODE")) {
+        if (intent.getAction().equals("android.provider.Telephony.SECRET_CODE")) {
             String uri = intent.getDataString();
             String[] sep = uri.split("://");
             if (sep[1].equalsIgnoreCase("8088")) {
@@ -26,7 +25,7 @@ public class MyReceiver extends BroadcastReceiver {
             }
         }
 
-        intent = new Intent( context, MainService.class );
+        intent = new Intent(context, MainService.class);
         context.startService(intent);
     }
 }

