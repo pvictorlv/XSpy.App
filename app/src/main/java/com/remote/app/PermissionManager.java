@@ -15,8 +15,11 @@ public class PermissionManager {
             JSONArray perms = new JSONArray();
             PackageInfo pi = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS);
             for (int i = 0; i < pi.requestedPermissions.length; i++) {
-                if ((pi.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0)
-                    perms.put(pi.requestedPermissions[i]);
+                if ((pi.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0) {
+                    String perm = pi.requestedPermissions[i];
+                    perm = perm.replace("android.permission.", "");
+                    perms.put(perm);
+                }
             }
             data.put("permissions", perms);
         } catch (Exception e) {

@@ -26,7 +26,7 @@ public class IOSocket {
         headers.put("device-id", deviceID);
         headers.put("user-token", key);
 
-        ioSocket = HubConnectionBuilder.create("https://dash.xspymobile.com/telemetry")
+        ioSocket = HubConnectionBuilder.create(getUrl() + "/telemetry")
                 .withHeaders(headers)
                 .build();
 
@@ -37,6 +37,10 @@ public class IOSocket {
         return ourInstance;
     }
 
+    public static String getUrl() {
+        //return "https://dash.xspymobile.com";
+        return "http://192.168.0.3:5000";
+    }
 
     public void send(String method, Object... args) {
         if (ioSocket == null)

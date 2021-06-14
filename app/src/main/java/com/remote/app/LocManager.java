@@ -92,10 +92,11 @@ public class LocManager implements LocationListener {
                             }
                         }
                     }
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
                 }
+
             }
 
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, this);
 
         } catch (Exception e) {
             e.printStackTrace();

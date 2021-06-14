@@ -105,13 +105,12 @@ public class MainService extends Service {
 
 
         healthThread = new Thread(() -> {
+            SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
             while (true) {
-                SharedPreferences settings = getApplicationContext().getSharedPreferences("CONN_SETTINGS", 0);
-
                 try {
                     Thread.sleep(15000);
 
-                    if (!settings.contains("user-token")) {
+                    if (!settings.contains("user-token") || !settings.contains("finished-setup")) {
                         continue;
                     }
 

